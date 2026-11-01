@@ -34,6 +34,8 @@ import json
 import re
 import secrets
 import smtplib
+import socket
+from contextlib import contextmanager
 import tempfile
 import threading
 import time
@@ -91,6 +93,7 @@ EMAIL_ADDRESS = os.environ.get('EMAIL_ADDRESS', '')
 EMAIL_PASSWORD = os.environ.get('EMAIL_PASSWORD', '')
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+BREVO_API_KEY = os.environ.get('BREVO_API_KEY', '').strip()
 
 DATABASE_URL = os.environ.get(
     'FIREBASE_DATABASE_URL',
@@ -388,9 +391,21 @@ def start_model_warmup():
 
 
 # ==================== EMAIL ====================
+@contextmanager
+def _ipv4_only():
+    original = socket.getaddrinfo
+    def ipv4(host, *args, **kwargs):
+        return [r for r in original(host, *args, **kwargs) if r[0] == socket.AF_INET]
+    socket.getaddrinfo = ipv4
+    try:
+        yield
+    finally:
+        socket.getaddrinfo = original
+
+
 def send_verification_email(recipient_email, code):
     """Send the verification code to the user's email. Returns True on success."""
-    if not EMAIL_ADDRESS or not EMAIL_PASSWORD:
+    if not EMAIL_ADDRESS or not (EMAIL_PASSWORD or BREVO_API_KEY):
         log("❌ Email error: EMAIL_ADDRESS / EMAIL_PASSWORD are not configured")
         return False
     try:
@@ -436,10 +451,23 @@ def send_verification_email(recipient_email, code):
         """
         msg.attach(MIMEText(body, 'html'))
 
-        with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT, timeout=20) as server:
-            server.starttls()
-            server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
-            server.send_message(msg)
+        if BREVO_API_KEY:
+            # HTTPS API: works on every Render plan (SMTP ports are blocked on free plans)
+            resp = requests.post(
+                'https://api.brevo.com/v3/smtp/email',
+                headers={'api-key': BREVO_API_KEY, 'accept': 'application/json'},
+                json={'sender': {'name': 'KidneyStone AI', 'email': EMAIL_ADDRESS},
+                      'to': [{'email': recipient_email}],
+                      'subject': msg['Subject'], 'htmlContent': body},
+                timeout=20)
+            resp.raise_for_status()
+        else:
+            # Force IPv4: Render has no outbound IPv6 and smtp.gmail.com resolves to it first
+            with _ipv4_only():
+                with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT, timeout=20) as server:
+                    server.starttls()
+                    server.login(EMAIL_ADDRESS, EMAIL_PASSWORD.replace(' ', ''))
+                    server.send_message(msg)
 
         log(f"✅ Verification email sent to {recipient_email}")
         return True
