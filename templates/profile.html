@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - KidneyStone AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .profile-page {
+            min-height: 100vh;
+            padding: 100px 20px 40px;
+            background: var(--bg);
+        }
+        .profile-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .profile-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .profile-header h1 {
+            font-size: clamp(2rem, 4vw, 2.5rem);
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .profile-card {
+            background: var(--surface);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+        }
+        .profile-cover {
+            height: 100px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+        }
+        .profile-avatar {
+            text-align: center;
+            margin-top: -50px;
+            margin-bottom: 1rem;
+        }
+        .avatar-circle {
+            width: 100px;
+            height: 100px;
+            background: var(--surface);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            border: 4px solid var(--bg);
+            font-size: 3rem;
+            color: var(--primary);
+        }
+        .profile-name {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .profile-name h2 {
+            margin-bottom: 0.25rem;
+        }
+        .profile-name p {
+            color: var(--text-secondary);
+        }
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            padding: 1.5rem;
+            background: var(--bg);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+        .stat {
+            text-align: center;
+        }
+        .stat-value {
+            display: block;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        .profile-info {
+            padding: 2rem;
+        }
+        .info-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+        }
+        .info-content {
+            flex: 1;
+        }
+        .info-label {
+            display: block;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        .info-value {
+            font-weight: 500;
+        }
+        .profile-actions {
+            padding: 2rem;
+            padding-top: 0;
+        }
+        .btn-danger {
+            width: 100%;
+            padding: 1rem;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-kidneys"></i>
+                <span>KidneyStone<span class="logo-highlight">AI</span></span>
+            </div>
+            <div class="nav-menu">
+                <a href="{{ url_for('index') }}">Home</a>
+                <a href="{{ url_for('upload') }}">Upload</a>
+                <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            </div>
+            <div class="nav-right">
+                <button class="theme-toggle" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <div class="user-menu">
+                    <span class="user-greeting">Hi, {{ user.display_name or session.get('user_name', 'User') }}</span>
+                    <a href="{{ url_for('logout') }}" class="btn-logout">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="profile-page">
+        <div class="profile-container">
+            <div class="profile-header">
+                <h1><i class="fas fa-user-circle"></i> My Profile</h1>
+            </div>
+
+            <div class="profile-card">
+                <div class="profile-cover"></div>
+                <div class="profile-avatar">
+                    <div class="avatar-circle">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+                
+                <div class="profile-name">
+                    <h2>{{ user.display_name or session.get('user_name', 'User') }}</h2>
+                    <p>Member since {{ user_data.created_at[:10] if user_data.created_at else '2024' }}</p>
+                </div>
+
+                <div class="profile-stats">
+                    <div class="stat">
+                        <span class="stat-value">{{ user_data.total_detections or 0 }}</span>
+                        <span class="stat-label">Detections</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value">{{ user_data.stones_detected or 0 }}</span>
+                        <span class="stat-label">Stones</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value">{{ user_data.normal_results or 0 }}</span>
+                        <span class="stat-label">Normal</span>
+                    </div>
+                </div>
+
+                <div class="profile-info">
+                    <div class="info-row">
+                        <div class="info-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div class="info-content">
+                            <span class="info-label">Email Address</span>
+                            <span class="info-value">{{ user.email }}</span>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-icon">
+                            <i class="fas fa-id-card"></i>
+                        </div>
+                        <div class="info-content">
+                            <span class="info-label">User ID</span>
+                            <span class="info-value">{{ user.uid[:8] }}...</span>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-icon">
+                            <i class="fas fa-calendar"></i>
+                        </div>
+                        <div class="info-content">
+                            <span class="info-label">Last Active</span>
+                            <span class="info-value">Today</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-actions">
+                    <button class="btn-danger" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> Sign Out
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const theme = localStorage.getItem('theme');
+        
+        if (theme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+            themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+        }
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            if (currentTheme === 'light') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+                themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            }
+        });
+
+        function logout() {
+            window.location.href = "{{ url_for('logout') }}";
+        }
+    </script>
+</body>
+</html>
