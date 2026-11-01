@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: ai-kidney-stone-detection
+    runtime: python
+    plan: standard
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: gunicorn app:app --workers 1 --threads 2 --timeout 300 --bind 0.0.0.0:$PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FLASK_DEBUG
+        value: "0"
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
+        sync: false
+      - key: FIREBASE_WEB_API_KEY
+        sync: false
+      - key: FIREBASE_DATABASE_URL
+        value: https://ai-powered-kidney-stone-default-rtdb.asia-southeast1.firebasedatabase.app
+      - key: FIREBASE_STORAGE_BUCKET
+        value: ai-powered-kidney-stone.firebasestorage.app
+      - key: EMAIL_ADDRESS
+        sync: false
+      - key: EMAIL_PASSWORD
+        sync: false
+      - key: EMAIL_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_PORT
+        value: "587"
+      - key: MODEL_H5_URL
+        value: https://github.com/Danish-khan-14/Ai_Powered_Kidney_Stone_Detection/releases/download/v1.0/best_model.h5
+      - key: MODEL_URL
+        value: https://github.com/Danish-khan-14/Ai_Powered_Kidney_Stone_Detection/releases/download/v1.0/best_model.keras
